@@ -51,7 +51,7 @@ public class Feature {
     public int getRandomY(Block block) {
         if (inAir) {
             for (int i = minY; i < maxY; i++) {
-                if (block.getWorld().getBlockAt(block.getX(), i, block.getY()).isEmpty()) {
+                if (block.getWorld().getBlockAt(block.getX(), i, block.getZ()).isEmpty()) {
                     return i;
                 }
             }

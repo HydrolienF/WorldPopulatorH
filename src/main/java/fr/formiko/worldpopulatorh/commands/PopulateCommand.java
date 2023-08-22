@@ -66,7 +66,8 @@ public class PopulateCommand implements CommandExecutor {
 
         new BukkitRunnable() {
             private long printTime, cpt, cptTotal, startTime = System.currentTimeMillis();
-            private Map<String, Integer> cptMap = features.stream().collect(java.util.stream.Collectors.toMap(Feature::getName, s -> 0));
+            private Map<String, Integer> cptMap = features.stream().map(Feature::getName).collect(java.util.stream.Collectors.toSet())
+                    .stream().collect(java.util.stream.Collectors.toMap(s -> s, s -> 0));
 
             @Override
             public void run() {
