@@ -9,8 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.Chunk.LoadLevel;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -34,14 +34,16 @@ public class PopulateCommand implements CommandExecutor {
             Biome.SNOWY_TAIGA, Biome.WINDSWEPT_HILLS);
     private static final List<Biome> nonColdLandBiomes = new ArrayList<>(landBiomes).stream().filter(b -> !coldLandBiomes.contains(b))
             .toList();
+
     public static List<ThingsToPlace> thingsToPlace = new LinkedList<>();
+    public static Map<Chunk, List<ThingsToPlace>> thingsToPlaceByChunk = new java.util.HashMap<>();
 
     //@formatter:off
     private static final List<Feature> features = List.of(
             new Feature("amethyst_geode", -50, 30, 0.0001, landBiomes, true),
             new Feature("shipwreck", 60, 100, 0.0000001, deepOceanBiomes, false),
-            new Feature("shipwreck_beached", 60, 100, 0.0000005, List.of(Biome.BEACH), false),
-            // new Feature("mineshaft", -60, 45, 0.0000005, landBiomes, false), // Always fail "That position is not loaded", probably because the structure is too big.
+            new Feature("shipwreck_beached", 60, 100, 0.000005, List.of(Biome.BEACH), false),
+            new Feature("mineshaft", -60, 45, 0.000001, landBiomes, false).setHuge(true),
             new Feature("iceberg_packed", 60, 100, 0.00000002, frozenOceanBiomes, true),
             new Feature("iceberg_blue", 60, 100, 0.00000002, frozenOceanBiomes, true),
             new Feature("moss_patch", 0, 50, 0.0008, nonAridLandBiomes, true).setInAir(true),
@@ -64,6 +66,7 @@ public class PopulateCommand implements CommandExecutor {
     private static void generateStructuresAndFeatures(CommandSender sender) {
         sender.sendMessage("Populating...");
         thingsToPlace = new LinkedList<>();
+        thingsToPlaceByChunk = new java.util.HashMap<>();
 
         new BukkitRunnable() {
             private long printTime, cpt, cptTotal, startTime = System.currentTimeMillis();
@@ -77,34 +80,38 @@ public class PopulateCommand implements CommandExecutor {
                 // Place structres and features from last tick.
                 List<ThingsToPlace> placed = new LinkedList<>();
                 for (ThingsToPlace thing : thingsToPlace) {
-                    if (thing.getChunk().getLoadLevel() == LoadLevel.ENTITY_TICKING) {
-                        thing.place();
+                    if (canBePlace(thing)) {
+                        placeThingsToPlace(thing);
                         placed.add(thing);
-                        thing.getChunk().setForceLoaded(false);
-                        thing.getChunk().unload();
                     }
                 }
                 thingsToPlace.removeAll(placed);
 
+                // free chunck that aren't used anymore.
+                freeUnusedChunks();
+
                 // Calculate the number of structures and features to place and there coordinates.
                 while (execTime + 50 > System.currentTimeMillis() && WorldSelectorHPlugin.getSelector().hasNextBlock()) {
                     Block column = WorldSelectorHPlugin.getSelector().nextColumn();
-                    Biome biome = column.getBiome();
-                    Chunk chunk = column.getChunk();
+
+                    // Biome biome = column.getBiome(); // Here biome is not the real biome. Maybe because we wronly save it in y=-64
+                    // This fix the problem. Probably because it partialy load the chunk and by doing so reload the biome.
+                    Biome biome = column.getChunk().getBlock(0, 0, 0).getBiome();
+
                     double r = random.nextDouble();
                     for (Feature feature : features) {
                         if (feature.isCompatibleBiome(biome)) {
+                            // TODO fix biome test
                             r = r - feature.getChanceToPlacePerColumn();
                             if (r < 0) {
                                 ThingsToPlace ttp = feature.getThingsToPlace(column);
                                 if (ttp == null) {
-                                    // Bukkit.getConsoleSender().sendMessage("Can't place " + feature.getName() + " in " + chunk + " because
-                                    // of no air found.");
+                                    Bukkit.getConsoleSender().sendMessage(
+                                            "Can't place " + feature.getName() + " in " + column + " because of no air found.");
                                     break;
                                 }
-                                chunk.setForceLoaded(true);
-                                chunk.load();
-                                // Bukkit.getConsoleSender().sendMessage("Want to place " + feature.getName() + " in " + chunk);
+                                Bukkit.getConsoleSender()
+                                        .sendMessage("Want to place " + feature.getName() + " in " + "(" + biome + ")" + " " + column);
                                 thingsToPlace.add(ttp);
                                 cptMap.put(feature.getName(), cptMap.get(feature.getName()) + 1);
                                 cpt++;
@@ -135,4 +142,39 @@ public class PopulateCommand implements CommandExecutor {
         sender.sendMessage("Progress: " + cpt + "   " + progress * 100 + "% ETA: "
                 + ((long) ((System.currentTimeMillis() - startTime) * (1 - progress))) + "ms");
     }
+
+    public static void addChunkToLoad(Chunk chunk, ThingsToPlace thing) {
+        if (!thingsToPlaceByChunk.containsKey(chunk)) {
+            thingsToPlaceByChunk.put(chunk, new LinkedList<>());
+        }
+        thingsToPlaceByChunk.get(chunk).add(thing);
+        chunk.setForceLoaded(true);
+        chunk.load();
+        // Bukkit.getConsoleSender().sendMessage("Add chunk to load " + chunk);
+    }
+
+    public static void placeThingsToPlace(ThingsToPlace thing) {
+        // place it
+        thing.place();
+        // remove the thing from all the chunks waiting list so that chunk without any waiting things can be unloaded.
+        releaseChunksLoaded(thing.getChunk(), thing);
+        if (thing.isHuge()) {
+            for (Chunk chunk : thing.getChunksToLoad()) {
+                releaseChunksLoaded(chunk, thing);
+            }
+        }
+    }
+
+    private static void releaseChunksLoaded(Chunk chunk, ThingsToPlace thing) { thingsToPlaceByChunk.get(chunk).remove(thing); }
+
+    private static void freeUnusedChunks() {
+        for (Chunk chunk : thingsToPlaceByChunk.keySet()) {
+            if (thingsToPlaceByChunk.get(chunk).isEmpty()) {
+                chunk.setForceLoaded(false);
+                chunk.unload();
+            }
+        }
+    }
+
+    public static boolean canBePlace(ThingsToPlace thingsToPlace) { return thingsToPlace.isChunkLoaded(); }
 }

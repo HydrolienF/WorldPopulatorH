@@ -2,7 +2,10 @@ package fr.formiko.worldpopulatorh;
 
 import fr.formiko.worldpopulatorh.commands.PopulateCommand;
 import fr.formiko.worldpopulatorh.commands.PopulateTabCompleter;
+import java.util.List;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class WorldPopulatorHPlugin extends JavaPlugin {
@@ -20,6 +23,21 @@ public class WorldPopulatorHPlugin extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage("run: " + command);
         // TODO send a custom ConsolCommandSender to get back the message of placed or failed and deal with it.
         Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+    }
+
+
+    public static List<Chunk> getAllChunksBetween(int x1, int z1, int x2, int z2, World world) {
+        int minX = Math.min(x1, x2);
+        int maxX = Math.max(x1, x2);
+        int minZ = Math.min(z1, z2);
+        int maxZ = Math.max(z1, z2);
+        List<Chunk> chunks = new java.util.LinkedList<>();
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                chunks.add(world.getChunkAt(x, z));
+            }
+        }
+        return chunks;
     }
 
 }
