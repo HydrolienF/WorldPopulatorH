@@ -33,7 +33,7 @@ public class PopulateCommand implements CommandExecutor {
         thingsToPlace = new LinkedList<>();
 
         new BukkitRunnable() {
-            private long printTime, execTime, cpt, cptTotal;
+            private long printTime, execTime, cpt, cptTotal, startTime = System.currentTimeMillis();
             private Map<String, Integer> cptMap = List.of("amethyst_geode").stream()
                     .collect(java.util.stream.Collectors.toMap(s -> s, s -> 0));
 
@@ -53,7 +53,8 @@ public class PopulateCommand implements CommandExecutor {
                 }
                 thingsToPlace.removeAll(placed);
 
-                // Calculate the number of structures and features to place and there coordinates.
+                // Calculate the number of structures and features to place and there
+                // coordinates.
                 while (execTime + 50 > System.currentTimeMillis() && WorldSelectorHPlugin.getSelector().hasNextBlock()) {
                     Chunk chunk = WorldSelectorHPlugin.getSelector().nextChunk();
                     if (chunk == null) {
@@ -64,9 +65,10 @@ public class PopulateCommand implements CommandExecutor {
                         // TODO generate shipwrecks
                     } else {
                         double r = Math.random();
-                        if (r < 0.1) {
+                        if (r < 0.02) {
                             chunk.setForceLoaded(true);
                             chunk.load();
+                            // TODO randomize location in chunk
                             thingsToPlace.add(new ThingsToPlace("amethyst_geode", chunk.getX() * 16, random.nextInt(100) - 64,
                                     chunk.getZ() * 16, true, chunk));
                             Bukkit.getConsoleSender().sendMessage("Want to place in " + chunk);
@@ -78,11 +80,12 @@ public class PopulateCommand implements CommandExecutor {
                 }
                 if (printTime + 1000 < System.currentTimeMillis()) {
                     printTime = System.currentTimeMillis();
-                    printProgress(sender, cpt);
+                    printProgress(sender, cpt, startTime);
                 }
                 if (WorldSelectorHPlugin.getSelector().progress() >= 1.0 && thingsToPlace.isEmpty()) {
-                    printProgress(sender, cpt);
-                    sender.sendMessage("Place " + cpt + " structures|features in " + cptTotal + " chunks.");
+                    printProgress(sender, cpt, startTime);
+                    sender.sendMessage("Place " + cpt + " structures|features in " + cptTotal + " chunks in "
+                            + (System.currentTimeMillis() - startTime) + "ms.");
                     sender.sendMessage("Place " + cptMap);
                     cancel();
                 }
@@ -90,7 +93,9 @@ public class PopulateCommand implements CommandExecutor {
         }.runTaskTimer(WorldPopulatorHPlugin.plugin, 0, 2); // 0, 2 because 1 tick is not enoth to load the chunk.
     }
 
-    private static void printProgress(CommandSender sender, long cpt) {
-        sender.sendMessage("Progress: " + cpt + "   " + WorldSelectorHPlugin.getSelector().progress() * 100 + "%");
+    private static void printProgress(CommandSender sender, long cpt, long startTime) {
+        double progress = WorldSelectorHPlugin.getSelector().progress();
+        sender.sendMessage("Progress: " + cpt + "   " + progress * 100 + "% ETA: "
+                + ((long) ((System.currentTimeMillis() - startTime) * (1 - progress))) + "ms");
     }
 }
