@@ -40,18 +40,18 @@ public class PopulateCommand implements CommandExecutor {
     private static final List<Feature> features = List.of(
             new Feature("amethyst_geode", -50, 30, 0.0001, landBiomes, true),
             new Feature("shipwreck", 60, 100, 0.0000001, deepOceanBiomes, false),
-            new Feature("shipwreck_beached", 60, 100, 0.0000001, List.of(Biome.BEACH), false),
+            new Feature("shipwreck_beached", 60, 100, 0.0000005, List.of(Biome.BEACH), false),
             // new Feature("mineshaft", -60, 45, 0.0000005, landBiomes, false), // Always fail "That position is not loaded", probably because the structure is too big.
             new Feature("iceberg_packed", 60, 100, 0.00000002, frozenOceanBiomes, true),
             new Feature("iceberg_blue", 60, 100, 0.00000002, frozenOceanBiomes, true),
-            new Feature("moss_patch", 0, 50, 0.001, nonAridLandBiomes, true).setInAir(true),
+            new Feature("moss_patch", 0, 50, 0.0008, nonAridLandBiomes, true).setInAir(true),
             new Feature("moss_patch_ceiling", 0, 50, 0.001, nonAridLandBiomes, true).setInAir(true),
             new Feature("moss_patch_ceiling", 0, 50, 0.004, List.of(Biome.RIVER), true).setInAir(true),
-            new Feature("dripstone_cluster", -50, 50, 0.0015, landBiomes, true).setInAir(true),
-            new Feature("dripstone_cluster", -50, 50, 0.004, aridBiomes, true).setInAir(true),
-            new Feature("clay_pool_with_dripleaves", -50, 30, 0.0004, nonColdLandBiomes, true).setInAir(true),
-            new Feature("clay_with_dripleaves", -50, 30, 0.0001, nonColdLandBiomes, true).setInAir(true),
-            new Feature("lush_caves_clay", -60, 40, 0.0003, landBiomes, true).setInAir(true)
+            new Feature("dripstone_cluster", -64, 50, 0.0007, landBiomes, true).setInAir(true),
+            new Feature("dripstone_cluster", -64, 50, 0.002, aridBiomes, true).setInAir(true),
+            new Feature("clay_pool_with_dripleaves", -64, 20, 0.0002, nonColdLandBiomes, true).setInAir(true),
+            new Feature("clay_with_dripleaves", -64, 20, 0.0001, nonColdLandBiomes, true).setInAir(true),
+            new Feature("lush_caves_clay", -64, 40, 0.00005, landBiomes, true).setInAir(true)
     );
     //@formatter:on
 
