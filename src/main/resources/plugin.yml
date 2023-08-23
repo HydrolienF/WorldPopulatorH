@@ -10,6 +10,10 @@ commands:
     description: Place structures and features in a selected area.
     usage: /populate
     permission: worldpopulatorh.polulate
+  populateAndClean:
+    description: Place structures and features in a selected area then clean the selected area.
+    usage: /populateAndClean
+    permission: worldpopulatorh.polulate
 dependencies:
   server:
     WorldSelectorH:

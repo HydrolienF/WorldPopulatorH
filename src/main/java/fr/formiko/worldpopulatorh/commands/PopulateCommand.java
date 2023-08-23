@@ -59,11 +59,11 @@ public class PopulateCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        generateStructuresAndFeatures(sender);
+        generateStructuresAndFeatures(sender, false);
         return true;
     }
 
-    private static void generateStructuresAndFeatures(CommandSender sender) {
+    public static void generateStructuresAndFeatures(CommandSender sender, boolean thenClean) {
         sender.sendMessage("Populating...");
         thingsToPlace = new LinkedList<>();
         thingsToPlaceByChunk = new java.util.HashMap<>();
@@ -107,8 +107,8 @@ public class PopulateCommand implements CommandExecutor {
                             if (r < 0) {
                                 ThingsToPlace ttp = feature.getThingsToPlace(column);
                                 if (ttp == null) {
-                                    Bukkit.getConsoleSender().sendMessage(
-                                            "Can't place " + feature.getName() + " in " + column + " because of no air found.");
+                                    // Bukkit.getConsoleSender().sendMessage(
+                                    // "Can't place " + feature.getName() + " in " + column + " because of no air found.");
                                     break;
                                 }
                                 Bukkit.getConsoleSender()
@@ -136,6 +136,10 @@ public class PopulateCommand implements CommandExecutor {
                             .collect(java.util.stream.Collectors.joining(", ")));
                     WorldPopulatorHPlugin.plugin.saveLocations(thingsLocations);
                     cancel();
+                    if (thenClean) {
+                        WorldSelectorHPlugin.resetSelector();
+                        WorldPopulatorHPlugin.runCommand("clean");
+                    }
                 }
             }
         }.runTaskTimer(WorldPopulatorHPlugin.plugin, 0, 2); // 0, 2 because 1 tick is not enoth to load the chunk.

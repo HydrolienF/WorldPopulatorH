@@ -1,13 +1,15 @@
 package fr.formiko.worldpopulatorh;
 
+import fr.formiko.worldpopulatorh.commands.PopulateAndCleanCommand;
 import fr.formiko.worldpopulatorh.commands.PopulateCommand;
-import fr.formiko.worldpopulatorh.commands.PopulateTabCompleter;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,7 +20,14 @@ public class WorldPopulatorHPlugin extends JavaPlugin {
     public void onEnable() {
         plugin = this;
         getCommand("populate").setExecutor(new PopulateCommand());
-        getCommand("populate").setTabCompleter(new PopulateTabCompleter());
+        getCommand("populate").setTabCompleter((CommandSender sender, Command command, String alias, String[] args) -> List.of());
+        getCommand("populateAndClean").setExecutor(new PopulateAndCleanCommand());
+        getCommand("populateAndClean").setTabCompleter((CommandSender sender, Command command, String alias, String[] args) -> List.of());
+    }
+
+    @Override
+    public void onDisable() {
+        // TODO stop current task with a boolean as if all column where done.
     }
 
 
