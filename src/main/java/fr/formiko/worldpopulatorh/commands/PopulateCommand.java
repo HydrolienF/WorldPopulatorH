@@ -43,7 +43,7 @@ public class PopulateCommand implements CommandExecutor {
             new Feature("amethyst_geode", -50, 30, 0.0001, landBiomes, true),
             new Feature("shipwreck", 60, 100, 0.0000001, deepOceanBiomes, false),
             new Feature("shipwreck_beached", 60, 100, 0.000005, List.of(Biome.BEACH), false),
-            new Feature("mineshaft", -60, 45, 0.000001, landBiomes, false).setHuge(true),
+            new Feature("mineshaft", -60, 45, 0.0000015, landBiomes, false).setHuge(true),
             new Feature("iceberg_packed", 60, 100, 0.00000002, frozenOceanBiomes, true),
             new Feature("iceberg_blue", 60, 100, 0.00000002, frozenOceanBiomes, true),
             new Feature("moss_patch", 0, 50, 0.0008, nonAridLandBiomes, true).setInAir(true),
@@ -70,8 +70,9 @@ public class PopulateCommand implements CommandExecutor {
 
         new BukkitRunnable() {
             private long printTime, cpt, cptTotal, startTime = System.currentTimeMillis();
-            private Map<String, Integer> cptMap = features.stream().map(Feature::getName).collect(java.util.stream.Collectors.toSet())
-                    .stream().collect(java.util.stream.Collectors.toMap(s -> s, s -> 0));
+            private Map<String, List<String>> thingsLocations = features.stream().map(Feature::getName)
+                    .collect(java.util.stream.Collectors.toSet()).stream()
+                    .collect(java.util.stream.Collectors.toMap(s -> s, s -> new LinkedList<>()));
 
             @Override
             public void run() {
@@ -113,7 +114,8 @@ public class PopulateCommand implements CommandExecutor {
                                 Bukkit.getConsoleSender()
                                         .sendMessage("Want to place " + feature.getName() + " in " + "(" + biome + ")" + " " + column);
                                 thingsToPlace.add(ttp);
-                                cptMap.put(feature.getName(), cptMap.get(feature.getName()) + 1);
+                                // thingsLocations.put(feature.getName(), thingsLocations.get(feature.getName()) + 1);
+                                thingsLocations.get(feature.getName()).add(ttp.getLocationAsString());
                                 cpt++;
                                 break;
                             }
@@ -130,7 +132,9 @@ public class PopulateCommand implements CommandExecutor {
                     printProgress(sender, cpt, startTime);
                     sender.sendMessage("Place " + cpt + " structures|features in " + cptTotal + " columns in "
                             + (System.currentTimeMillis() - startTime) + "ms.");
-                    sender.sendMessage("Place " + cptMap);
+                    sender.sendMessage("Place " + thingsLocations.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue().size())
+                            .collect(java.util.stream.Collectors.joining(", ")));
+                    WorldPopulatorHPlugin.plugin.saveLocations(thingsLocations);
                     cancel();
                 }
             }
@@ -171,7 +175,7 @@ public class PopulateCommand implements CommandExecutor {
         for (Chunk chunk : thingsToPlaceByChunk.keySet()) {
             if (thingsToPlaceByChunk.get(chunk).isEmpty()) {
                 chunk.setForceLoaded(false);
-                chunk.unload();
+                // chunk.unload(); // Disable because it may cause issues with mineshaft generation.
             }
         }
     }

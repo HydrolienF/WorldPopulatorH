@@ -7,9 +7,9 @@ import org.bukkit.Chunk.LoadLevel;
 
 public class ThingsToPlace {
     private String type;
-    private int x;
-    private int y;
-    private int z;
+    private final int x;
+    private final int y;
+    private final int z;
     private boolean feature;
     private Chunk chunk;
     private boolean huge;
@@ -26,6 +26,9 @@ public class ThingsToPlace {
         PopulateCommand.addChunkToLoad(chunk, this);
         if (huge) {
             int radius = 5;
+            // TODO try bigger radius to see if it fix "[21:22:20 WARN]: Trying to mark a block for PostProcessing @
+            // MutableBlockPosition{x=3757, y=9, z=-14405}, but this operation is not supported."
+            // It seems to be the same with 5 or 10.
             int chunkX = x / 16;
             int chunkZ = z / 16;
             chunksToLoad = WorldPopulatorHPlugin.getAllChunksBetween(chunkX - radius, chunkZ - radius, chunkX + radius, chunkZ + radius,
@@ -39,6 +42,7 @@ public class ThingsToPlace {
     public Chunk getChunk() { return chunk; }
     public List<Chunk> getChunksToLoad() { return chunksToLoad; }
     public boolean isHuge() { return huge; }
+    public String getLocationAsString() { return x + " " + y + " " + z; }
 
     public boolean isChunkLoaded() {
         if (!huge) {

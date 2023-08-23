@@ -2,10 +2,13 @@ package fr.formiko.worldpopulatorh;
 
 import fr.formiko.worldpopulatorh.commands.PopulateCommand;
 import fr.formiko.worldpopulatorh.commands.PopulateTabCompleter;
+import java.io.File;
 import java.util.List;
+import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class WorldPopulatorHPlugin extends JavaPlugin {
@@ -40,4 +43,18 @@ public class WorldPopulatorHPlugin extends JavaPlugin {
         return chunks;
     }
 
+    public boolean saveLocations(Map<String, List<String>> locations) {
+        File dataFile = new File("plugins/WorldPopulatorH/locations.yml");
+        File parentFile = dataFile.getParentFile();
+        parentFile.mkdirs();
+        YamlConfiguration data = YamlConfiguration.loadConfiguration(dataFile);
+        try {
+            data.set("locations", locations);
+            data.save(dataFile);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
