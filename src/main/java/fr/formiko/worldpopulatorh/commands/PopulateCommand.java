@@ -105,35 +105,38 @@ public class PopulateCommand implements CommandExecutor {
 
                 // Calculate the number of structures and features to place and there coordinates.
                 while (execTime + 50 > System.currentTimeMillis() && WorldSelectorHPlugin.getSelector().hasNextBlock() && !stop) {
-                    Block column = WorldSelectorHPlugin.getSelector().nextColumn();
+                    Chunk chunk = WorldSelectorHPlugin.getSelector().nextChunk();
+                    Biome biome = chunk.getBlock(0, 0, 0).getBiome();
 
-                    // Biome biome = column.getBiome(); // Here biome is not the real biome. Maybe because we wronly save it in y=-64
-                    // This fix the problem. Probably because it partialy load the chunk and by doing so reload the biome.
-                    Biome biome = column.getChunk().getBlock(0, 0, 0).getBiome();
-
-                    double r = random.nextDouble();
-                    for (Feature feature : features) {
-                        if (feature.isCompatibleBiome(biome)) {
-                            // TODO fix biome test
-                            r = r - feature.getChanceToPlacePerColumn();
-                            if (r < 0) {
-                                ThingsToPlace ttp = feature.getThingsToPlace(column);
-                                if (ttp == null) {
-                                    // Bukkit.getConsoleSender().sendMessage(
-                                    // "Can't place " + feature.getName() + " in " + column + " because of no air found.");
-                                    break;
+                    for (int i = 0; i < 16; i++) {
+                        for (int j = 0; j < 16; j++) {
+                            Block column = chunk.getBlock(i, 0, j);
+                            double r = random.nextDouble();
+                            for (Feature feature : features) {
+                                if (feature.isCompatibleBiome(biome)) {
+                                    // TODO fix biome test
+                                    r = r - feature.getChanceToPlacePerColumn();
+                                    if (r < 0) {
+                                        ThingsToPlace ttp = feature.getThingsToPlace(column);
+                                        if (ttp == null) {
+                                            // Bukkit.getConsoleSender().sendMessage(
+                                            // "Can't place " + feature.getName() + " in " + column + " because of no air found.");
+                                            break;
+                                        }
+                                        Bukkit.getConsoleSender().sendMessage(
+                                                "Want to place " + feature.getName() + " in " + "(" + biome + ")" + " " + column);
+                                        thingsToPlace.add(ttp);
+                                        // thingsLocations.put(feature.getName(), thingsLocations.get(feature.getName()) + 1);
+                                        thingsLocations.get(feature.getName()).add(ttp.getLocationAsString());
+                                        cpt++;
+                                        break;
+                                    }
                                 }
-                                Bukkit.getConsoleSender()
-                                        .sendMessage("Want to place " + feature.getName() + " in " + "(" + biome + ")" + " " + column);
-                                thingsToPlace.add(ttp);
-                                // thingsLocations.put(feature.getName(), thingsLocations.get(feature.getName()) + 1);
-                                thingsLocations.get(feature.getName()).add(ttp.getLocationAsString());
-                                cpt++;
-                                break;
                             }
+                            cptTotal++;
                         }
                     }
-                    cptTotal++;
+
                 }
 
                 if (printTime + 1000 < System.currentTimeMillis()) {
