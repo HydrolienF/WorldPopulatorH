@@ -37,6 +37,9 @@ public class PopulateCommand implements CommandExecutor {
 
     public static List<ThingsToPlace> thingsToPlace = new LinkedList<>();
     public static Map<Chunk, List<ThingsToPlace>> thingsToPlaceByChunk = new java.util.HashMap<>();
+    private static Map<String, List<String>> thingsLocations;
+    private static long printTime, cpt, cptTotal, startTime = -1;
+    public static boolean stop = false;
 
     //@formatter:off
     private static final List<Feature> features = List.of(
@@ -59,20 +62,29 @@ public class PopulateCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        generateStructuresAndFeatures(sender, false);
+        if (args.length > 0 && args[0].equals("stop")) {
+            stop = true;
+        } else {
+            generateStructuresAndFeatures(sender, false);
+        }
         return true;
     }
 
     public static void generateStructuresAndFeatures(CommandSender sender, boolean thenClean) {
-        sender.sendMessage("Populating...");
         thingsToPlace = new LinkedList<>();
         thingsToPlaceByChunk = new java.util.HashMap<>();
+        if (startTime == -1) { // need to init for the first time.
+            sender.sendMessage("Populating...");
+            thingsLocations = features.stream().map(Feature::getName).collect(java.util.stream.Collectors.toSet()).stream()
+                    .collect(java.util.stream.Collectors.toMap(s -> s, s -> new LinkedList<>()));
+            startTime = System.currentTimeMillis();
+        } else {
+            sender.sendMessage("Resuming populating...");
+            printFullProgress(sender);
+        }
+        stop = false;
 
         new BukkitRunnable() {
-            private long printTime, cpt, cptTotal, startTime = System.currentTimeMillis();
-            private Map<String, List<String>> thingsLocations = features.stream().map(Feature::getName)
-                    .collect(java.util.stream.Collectors.toSet()).stream()
-                    .collect(java.util.stream.Collectors.toMap(s -> s, s -> new LinkedList<>()));
 
             @Override
             public void run() {
@@ -92,7 +104,7 @@ public class PopulateCommand implements CommandExecutor {
                 freeUnusedChunks();
 
                 // Calculate the number of structures and features to place and there coordinates.
-                while (execTime + 50 > System.currentTimeMillis() && WorldSelectorHPlugin.getSelector().hasNextBlock()) {
+                while (execTime + 50 > System.currentTimeMillis() && WorldSelectorHPlugin.getSelector().hasNextBlock() && !stop) {
                     Block column = WorldSelectorHPlugin.getSelector().nextColumn();
 
                     // Biome biome = column.getBiome(); // Here biome is not the real biome. Maybe because we wronly save it in y=-64
@@ -126,17 +138,18 @@ public class PopulateCommand implements CommandExecutor {
 
                 if (printTime + 1000 < System.currentTimeMillis()) {
                     printTime = System.currentTimeMillis();
-                    printProgress(sender, cpt, startTime);
+                    printProgress(sender);
                 }
-                if (WorldSelectorHPlugin.getSelector().progress() >= 1.0 && thingsToPlace.isEmpty()) {
-                    printProgress(sender, cpt, startTime);
-                    sender.sendMessage("Place " + cpt + " structures|features in " + cptTotal + " columns in "
-                            + (System.currentTimeMillis() - startTime) + "ms.");
-                    sender.sendMessage("Place " + thingsLocations.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue().size())
-                            .collect(java.util.stream.Collectors.joining(", ")));
-                    WorldPopulatorHPlugin.plugin.saveLocations(thingsLocations);
+                if (stop) {
+                    sender.sendMessage("stopping. Wating to all things to be placed & all chunks to be unloaded. "
+                            + thingsToPlaceByChunk.size() + " chunks to unload.");
+                }
+                if ((WorldSelectorHPlugin.getSelector().progress() >= 1.0 && thingsToPlace.isEmpty())
+                        || (stop && thingsToPlaceByChunk.isEmpty())) {
+                    printFullProgress(sender);
+                    WorldPopulatorHPlugin.plugin.saveData(thingsLocations, cpt, cptTotal, startTime);
                     cancel();
-                    if (thenClean) {
+                    if (thenClean && !stop) {
                         WorldSelectorHPlugin.resetSelector();
                         WorldPopulatorHPlugin.runCommand("clean");
                     }
@@ -145,10 +158,18 @@ public class PopulateCommand implements CommandExecutor {
         }.runTaskTimer(WorldPopulatorHPlugin.plugin, 0, 2); // 0, 2 because 1 tick is not enoth to load the chunk.
     }
 
-    private static void printProgress(CommandSender sender, long cpt, long startTime) {
+    private static void printProgress(CommandSender sender) {
         double progress = WorldSelectorHPlugin.getSelector().progress();
         sender.sendMessage("Progress: " + cpt + "   " + progress * 100 + "% ETA: "
                 + ((long) ((System.currentTimeMillis() - startTime) * (1 - progress))) + "ms");
+    }
+
+    private static void printFullProgress(CommandSender sender) {
+        printProgress(sender);
+        sender.sendMessage(
+                "Place " + cpt + " structures|features in " + cptTotal + " columns in " + (System.currentTimeMillis() - startTime) + "ms.");
+        sender.sendMessage("Place " + thingsLocations.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue().size())
+                .collect(java.util.stream.Collectors.joining(", ")));
     }
 
     public static void addChunkToLoad(Chunk chunk, ThingsToPlace thing) {
@@ -176,13 +197,36 @@ public class PopulateCommand implements CommandExecutor {
     private static void releaseChunksLoaded(Chunk chunk, ThingsToPlace thing) { thingsToPlaceByChunk.get(chunk).remove(thing); }
 
     private static void freeUnusedChunks() {
+        List<Chunk> chunksToRemoveFromList = new LinkedList<>();
         for (Chunk chunk : thingsToPlaceByChunk.keySet()) {
             if (thingsToPlaceByChunk.get(chunk).isEmpty()) {
                 chunk.setForceLoaded(false);
                 // chunk.unload(); // Disable because it may cause issues with mineshaft generation.
+                chunksToRemoveFromList.add(chunk);
             }
+        }
+        for (Chunk chunk : chunksToRemoveFromList) {
+            thingsToPlaceByChunk.remove(chunk);
         }
     }
 
     public static boolean canBePlace(ThingsToPlace thingsToPlace) { return thingsToPlace.isChunkLoaded(); }
+
+    @SuppressWarnings("unchecked")
+    public static void loadData() {
+        Map<String, Object> data = WorldPopulatorHPlugin.plugin.loadData();
+        Bukkit.getConsoleSender().sendMessage("data: " + data);
+        Bukkit.getConsoleSender().sendMessage("locations: " + data.get("locations"));
+        Bukkit.getConsoleSender().sendMessage("locations.getClass(): " + data.get("locations").getClass());
+        // TODO be able to load thingsLocations here as a Map<String, List<String>>.
+        thingsLocations = (Map<String, List<String>>) data.getOrDefault("locations",
+                features.stream().map(Feature::getName).collect(java.util.stream.Collectors.toSet()).stream()
+                        .collect(java.util.stream.Collectors.toMap(s -> s, s -> new LinkedList<>())));
+        cpt = (long) data.get("cpt");
+        cptTotal = (long) data.get("cptTotal");
+        startTime = (long) data.get("startTime");
+        Bukkit.getConsoleSender().sendMessage("cpt: " + cpt);
+        Bukkit.getConsoleSender().sendMessage("cptTotal: " + cptTotal);
+        Bukkit.getConsoleSender().sendMessage("startTime: " + startTime);
+    }
 }

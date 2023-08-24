@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class WorldPopulatorHPlugin extends JavaPlugin {
     public static WorldPopulatorHPlugin plugin;
+    private static String pathToData = "plugins/WorldPopulatorH/data.yml";
 
     @Override
     public void onEnable() {
@@ -23,6 +24,11 @@ public class WorldPopulatorHPlugin extends JavaPlugin {
         getCommand("populate").setTabCompleter((CommandSender sender, Command command, String alias, String[] args) -> List.of());
         getCommand("populateAndClean").setExecutor(new PopulateAndCleanCommand());
         getCommand("populateAndClean").setTabCompleter((CommandSender sender, Command command, String alias, String[] args) -> List.of());
+        try {
+            PopulateCommand.loadData();
+        } catch (Exception e) {
+            Bukkit.getConsoleSender().sendMessage("No data file found");
+        }
     }
 
     @Override
@@ -52,18 +58,27 @@ public class WorldPopulatorHPlugin extends JavaPlugin {
         return chunks;
     }
 
-    public boolean saveLocations(Map<String, List<String>> locations) {
-        File dataFile = new File("plugins/WorldPopulatorH/locations.yml");
+    public boolean saveData(Map<String, List<String>> locations, long cpt, long cptTotal, long startTime) {
+        File dataFile = new File(pathToData);
         File parentFile = dataFile.getParentFile();
         parentFile.mkdirs();
         YamlConfiguration data = YamlConfiguration.loadConfiguration(dataFile);
         try {
             data.set("locations", locations);
+            data.set("cpt", cpt);
+            data.set("cptTotal", cptTotal);
+            data.set("startTime", startTime);
             data.save(dataFile);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public Map<String, Object> loadData() {
+        File dataFile = new File(pathToData);
+        YamlConfiguration data = YamlConfiguration.loadConfiguration(dataFile);
+        return data.getValues(false);
     }
 }
