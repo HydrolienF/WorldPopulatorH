@@ -124,7 +124,6 @@ public class PopulateCommand implements CommandExecutor {
                             double r = random.nextDouble();
                             for (Feature feature : features) {
                                 if (feature.isCompatibleBiome(biome)) {
-                                    // TODO fix biome test
                                     r = r - feature.getChanceToPlacePerColumn();
                                     if (r < 0) {
                                         ThingsToPlace ttp = feature.getThingsToPlace(column);
@@ -136,7 +135,6 @@ public class PopulateCommand implements CommandExecutor {
                                         Bukkit.getConsoleSender().sendMessage(
                                                 "Want to place " + feature.getName() + " in " + "(" + biome + ")" + " " + column);
                                         thingsToPlace.add(ttp);
-                                        // thingsLocations.put(feature.getName(), thingsLocations.get(feature.getName()) + 1);
                                         thingsLocations.get(feature.getName()).add(ttp.getLocationAsString());
                                         cpt++;
                                         break;
@@ -176,8 +174,6 @@ public class PopulateCommand implements CommandExecutor {
         long timeForFullProgress = (long) ((System.currentTimeMillis() - startTime) / progress);
         long timeForFullProgressLeft = timeForFullProgress - (long) (System.currentTimeMillis() - startTime);
         sender.sendMessage("Progress: " + cpt + "   " + progress * 100 + "% ETA: " + Duration.ofMillis(timeForFullProgressLeft));
-        // sender.sendMessage("Progress: " + cpt + " " + progress * 100 + "% ETA: "
-        // + ((long) ((System.currentTimeMillis() - startTime) / Math.max(1 - progress, Double.MIN_VALUE))) + "ms");
     }
 
     private static void printFullProgress(CommandSender sender) {
