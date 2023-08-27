@@ -179,7 +179,7 @@ public class PopulateCommand implements CommandExecutor {
     private static void printFullProgress(CommandSender sender) {
         printProgress(sender);
         sender.sendMessage("Place " + cpt + " structures|features in " + cptTotal + " columns in "
-                + Duration.ofMillis(System.currentTimeMillis() - startTime) + "/.");
+                + Duration.ofMillis(System.currentTimeMillis() - startTime) + ".");
         sender.sendMessage("Place " + thingsLocations.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue().size())
                 .collect(java.util.stream.Collectors.joining(", ")));
     }
