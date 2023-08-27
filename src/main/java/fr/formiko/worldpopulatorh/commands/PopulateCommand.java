@@ -25,7 +25,7 @@ public class PopulateCommand implements CommandExecutor {
             Biome.LUKEWARM_OCEAN, Biome.DEEP_LUKEWARM_OCEAN, Biome.COLD_OCEAN, Biome.DEEP_COLD_OCEAN, Biome.WARM_OCEAN);
     private static final List<Biome> deepOceanBiomes = List.of(Biome.DEEP_OCEAN, Biome.DEEP_FROZEN_OCEAN, Biome.DEEP_LUKEWARM_OCEAN,
             Biome.DEEP_COLD_OCEAN);
-    private static final List<Biome> frozenOceanBiomes = List.of(Biome.FROZEN_OCEAN, Biome.DEEP_FROZEN_OCEAN);
+    private static final List<Biome> frozenOceanBiomes = List.of(Biome.DEEP_FROZEN_OCEAN, Biome.DEEP_COLD_OCEAN);
     private static final List<Biome> allBiomes = List.of(Biome.OCEAN, Biome.PLAINS, Biome.DESERT, Biome.WINDSWEPT_HILLS, Biome.FOREST,
             Biome.TAIGA, Biome.SWAMP, Biome.MANGROVE_SWAMP, Biome.RIVER, Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER, Biome.SNOWY_PLAINS,
             Biome.MUSHROOM_FIELDS, Biome.BEACH, Biome.JUNGLE, Biome.SPARSE_JUNGLE, Biome.DEEP_OCEAN, Biome.STONY_SHORE, Biome.SNOWY_BEACH,
