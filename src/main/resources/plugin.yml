@@ -1,5 +1,5 @@
 name: WorldPopulatorH
-version: 0.0.1
+version: 1.0.0
 main: fr.formiko.worldpopulatorh.WorldPopulatorHPlugin
 description: Select part of the world.
 author: Hydrolien
