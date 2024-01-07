@@ -6,6 +6,7 @@ import fr.formiko.worldpopulatorh.WorldPopulatorHPlugin;
 import fr.formiko.worldselectorh.WorldSelectorHPlugin;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class PopulateCommand implements CommandExecutor {
             .toList();
 
     public static List<ThingsToPlace> thingsToPlace = new LinkedList<>();
-    public static Map<Chunk, List<ThingsToPlace>> thingsToPlaceByChunk = new java.util.HashMap<>();
+    public static Map<Chunk, List<ThingsToPlace>> thingsToPlaceByChunk = new HashMap<>();
     private static Map<String, List<String>> thingsLocations;
     private static long printTime, cpt, cptTotal, startTime = -1;
     public static boolean stop = false;
@@ -57,8 +58,8 @@ public class PopulateCommand implements CommandExecutor {
             new Feature("shipwreck", 60, 100, 0.0000002, deepOceanBiomes, false),
             new Feature("shipwreck_beached", 60, 100, 0.000005, List.of(Biome.BEACH), false),
             // new Feature("mineshaft", -60, 45, 0.0000015, landBiomes, false).setHuge(true),
-            new Feature("iceberg_packed", 60, 100, 0.0000001, frozenOceanBiomes, true),
-            new Feature("iceberg_blue", 60, 100, 0.0000001, frozenOceanBiomes, true),
+            new Feature("iceberg_packed", 60, 100, 0.0000001, frozenOceanBiomes, true).setMaxZ(7000),
+            new Feature("iceberg_blue", 60, 100, 0.0000001, frozenOceanBiomes, true).setMaxZ(7000),
             new Feature("moss_patch", 0, 50, 0.0008, nonAridLandBiomes, true).setInAir(true),
             new Feature("moss_patch_ceiling", 0, 50, 0.001, nonAridLandBiomes, true).setInAir(true),
             new Feature("moss_patch_ceiling", 0, 50, 0.004, List.of(Biome.RIVER), true).setInAir(true),
@@ -123,7 +124,7 @@ public class PopulateCommand implements CommandExecutor {
                             Block column = chunk.getBlock(i, 0, j);
                             double r = random.nextDouble();
                             for (Feature feature : features) {
-                                if (feature.isCompatibleBiome(biome)) {
+                                if (feature.isCompatibleBiome(biome) && feature.isCompatibleXZ(column.getX(), column.getZ())) {
                                     r = r - feature.getChanceToPlacePerColumn();
                                     if (r < 0) {
                                         ThingsToPlace ttp = feature.getThingsToPlace(column);

@@ -10,6 +10,10 @@ public class Feature {
     private String name;
     private int minY;
     private int maxY;
+    private int minX;
+    private int maxX;
+    private int minZ;
+    private int maxZ;
     private double chanceToPlacePerColumn;
     private List<Biome> biomesWhereToPlace;
     private boolean feature;
@@ -23,6 +27,10 @@ public class Feature {
         this.chanceToPlacePerColumn = chanceToPlacePerColumn;
         this.biomesWhereToPlace = biomesWhereToPlace;
         this.feature = feature;
+        this.minX = Integer.MIN_VALUE;
+        this.maxX = Integer.MAX_VALUE;
+        this.minZ = Integer.MIN_VALUE;
+        this.maxZ = Integer.MAX_VALUE;
     }
 
     public String getName() { return name; }
@@ -39,6 +47,22 @@ public class Feature {
         this.huge = huge;
         return this;
     }
+    public Feature setMaxX(int maxX) {
+        this.maxX = maxX;
+        return this;
+    }
+    public Feature setMinX(int minX) {
+        this.minX = minX;
+        return this;
+    }
+    public Feature setMaxZ(int maxZ) {
+        this.maxZ = maxZ;
+        return this;
+    }
+    public Feature setMinZ(int minZ) {
+        this.minZ = minZ;
+        return this;
+    }
     public boolean isInAir() { return inAir; }
     public boolean isHuge() { return huge; }
 
@@ -50,6 +74,7 @@ public class Feature {
         return new ThingsToPlace(name, block.getX(), y, block.getZ(), feature, block.getChunk(), huge);
     }
     public boolean isCompatibleBiome(Biome biome) { return biomesWhereToPlace.contains(biome); }
+    public boolean isCompatibleXZ(int x, int z) { return x >= minX && x <= maxX && z >= minZ && z <= maxZ; }
 
     /**
      * Return a random y or the lowest empty y if inAir is true.
