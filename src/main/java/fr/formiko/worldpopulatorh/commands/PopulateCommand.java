@@ -54,10 +54,10 @@ public class PopulateCommand implements CommandExecutor {
 
     //@formatter:off
     private static final List<Feature> features = List.of(
-            // new Feature("amethyst_geode", -50, 30, 0.0001, landBiomes, true),
+            new Feature("amethyst_geode", -50, 30, 0.00005, landBiomes, true).setMinX(42000).setMaxX(47700).setMinZ(21000).setMaxZ(26000),
             new Feature("shipwreck", 60, 100, 0.0000002, deepOceanBiomes, false),
             new Feature("shipwreck_beached", 60, 100, 0.000005, List.of(Biome.BEACH), false),
-            // new Feature("mineshaft", -60, 45, 0.0000015, landBiomes, false).setHuge(true),
+            new Feature("mineshaft", -60, 45, 0.0000015, landBiomes, false).setHuge(true).setMinX(17000).setMaxX(22000).setMinZ(5000).setMaxZ(10000),
             new Feature("iceberg_packed", 60, 100, 0.0000001, frozenOceanBiomes, true).setMaxZ(7000),
             new Feature("iceberg_blue", 60, 100, 0.0000001, frozenOceanBiomes, true).setMaxZ(7000),
             new Feature("moss_patch", 0, 50, 0.0008, nonAridLandBiomes, true).setInAir(true),
