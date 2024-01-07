@@ -31,3 +31,6 @@ build
 
 # IDE
 .vscode/
+
+# Probably some gradle tasks :
+bin/
