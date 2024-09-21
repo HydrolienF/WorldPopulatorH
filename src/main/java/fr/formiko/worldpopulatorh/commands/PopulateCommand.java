@@ -3,9 +3,9 @@ package fr.formiko.worldpopulatorh.commands;
 import fr.formiko.worldpopulatorh.Feature;
 import fr.formiko.worldpopulatorh.ThingsToPlace;
 import fr.formiko.worldpopulatorh.WorldPopulatorHPlugin;
+import fr.formiko.worldpopulatorh.biomes.NMSBiomeUtils;
 import fr.formiko.worldselectorh.WorldSelectorHPlugin;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,38 +13,21 @@ import java.util.Map;
 import java.util.Random;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitRunnable;
+import net.minecraft.world.level.biome.Biome;
 
-public class PopulateCommand implements CommandExecutor {
+// @CommandAlias("populate")
+public class PopulateCommand {
     private static final Random random = new Random();
-    private static final List<Biome> oceanBiomes = List.of(Biome.OCEAN, Biome.DEEP_OCEAN, Biome.FROZEN_OCEAN, Biome.DEEP_FROZEN_OCEAN,
-            Biome.LUKEWARM_OCEAN, Biome.DEEP_LUKEWARM_OCEAN, Biome.COLD_OCEAN, Biome.DEEP_COLD_OCEAN, Biome.WARM_OCEAN);
-    private static final List<Biome> deepOceanBiomes = List.of(Biome.DEEP_OCEAN, Biome.DEEP_FROZEN_OCEAN, Biome.DEEP_LUKEWARM_OCEAN,
-            Biome.DEEP_COLD_OCEAN);
-    private static final List<Biome> frozenOceanBiomes = List.of(Biome.DEEP_FROZEN_OCEAN, Biome.DEEP_COLD_OCEAN);
-    private static final List<Biome> allBiomes = List.of(Biome.OCEAN, Biome.PLAINS, Biome.DESERT, Biome.WINDSWEPT_HILLS, Biome.FOREST,
-            Biome.TAIGA, Biome.SWAMP, Biome.MANGROVE_SWAMP, Biome.RIVER, Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER, Biome.SNOWY_PLAINS,
-            Biome.MUSHROOM_FIELDS, Biome.BEACH, Biome.JUNGLE, Biome.SPARSE_JUNGLE, Biome.DEEP_OCEAN, Biome.STONY_SHORE, Biome.SNOWY_BEACH,
-            Biome.BIRCH_FOREST, Biome.DARK_FOREST, Biome.SNOWY_TAIGA, Biome.OLD_GROWTH_PINE_TAIGA, Biome.WINDSWEPT_FOREST, Biome.SAVANNA,
-            Biome.SAVANNA_PLATEAU, Biome.BADLANDS, Biome.WOODED_BADLANDS, Biome.WARM_OCEAN, Biome.LUKEWARM_OCEAN, Biome.COLD_OCEAN,
-            Biome.DEEP_LUKEWARM_OCEAN, Biome.DEEP_COLD_OCEAN, Biome.DEEP_FROZEN_OCEAN, Biome.SUNFLOWER_PLAINS,
-            Biome.WINDSWEPT_GRAVELLY_HILLS, Biome.FLOWER_FOREST, Biome.ICE_SPIKES, Biome.OLD_GROWTH_BIRCH_FOREST,
-            Biome.OLD_GROWTH_SPRUCE_TAIGA, Biome.WINDSWEPT_SAVANNA, Biome.ERODED_BADLANDS, Biome.BAMBOO_JUNGLE, Biome.BASALT_DELTAS,
-            Biome.DRIPSTONE_CAVES, Biome.LUSH_CAVES, Biome.MEADOW, Biome.GROVE, Biome.SNOWY_SLOPES, Biome.FROZEN_PEAKS, Biome.JAGGED_PEAKS,
-            Biome.STONY_PEAKS, Biome.CHERRY_GROVE, Biome.CUSTOM);
-    private static final List<Biome> landBiomes = new ArrayList<>(allBiomes).stream().filter(b -> !oceanBiomes.contains(b)).toList();
-    private static final List<Biome> aridBiomes = List.of(Biome.DESERT, Biome.SAVANNA, Biome.WOODED_BADLANDS, Biome.BADLANDS,
-            Biome.ERODED_BADLANDS);
-    private static final List<Biome> nonAridLandBiomes = new ArrayList<>(landBiomes).stream().filter(b -> !aridBiomes.contains(b)).toList();
-    private static final List<Biome> coldLandBiomes = List.of(Biome.TAIGA, Biome.SNOWY_BEACH, Biome.SNOWY_PLAINS, Biome.SNOWY_SLOPES,
-            Biome.SNOWY_TAIGA, Biome.WINDSWEPT_HILLS);
-    private static final List<Biome> nonColdLandBiomes = new ArrayList<>(landBiomes).stream().filter(b -> !coldLandBiomes.contains(b))
-            .toList();
+    private static final List<String> nonDeepOceanBiomes = List.of("mvndi:frozen_ocean", "mvndi:ocean", "mvndi:cold_ocean",
+            "mvndi:lukewarm_ocean", "mvndi:warm_ocean", "mvndi:coral_reef_ocean");
+    private static final List<String> frozenOceanBiomes = List.of("mvndi:cold_ocean", "mvndi:frozen_ocean");
+    private static final List<String> beachBiomes = List.of("mvndi:beach", "mvndi:cold_beach", "mvndi:mediteranean_beach",
+            "mvndi:warm_beach");
+    private static final List<String> minesBiomes = List.of("mvndi:baltic_coast_copenhague", "mvndi:central_europe_prague",
+            "mvndi:northen_forest_falun");
 
     public static List<ThingsToPlace> thingsToPlace = new LinkedList<>();
     public static Map<Chunk, List<ThingsToPlace>> thingsToPlaceByChunk = new HashMap<>();
@@ -54,44 +37,40 @@ public class PopulateCommand implements CommandExecutor {
 
     //@formatter:off
     private static final List<Feature> features = List.of(
-            new Feature("amethyst_geode", -50, 30, 0.00005, landBiomes, true).setMinX(42000).setMaxX(47700).setMinZ(21000).setMaxZ(26000),
-            new Feature("shipwreck", 60, 100, 0.0000002, deepOceanBiomes, false),
-            new Feature("shipwreck_beached", 60, 100, 0.000005, List.of(Biome.BEACH), false),
-            new Feature("mineshaft", -60, 45, 0.0000015, landBiomes, false).setHuge(true).setMinX(17000).setMaxX(22000).setMinZ(5000).setMaxZ(10000),
-            new Feature("iceberg_packed", 60, 100, 0.0000001, frozenOceanBiomes, true).setMaxZ(7000),
-            new Feature("iceberg_blue", 60, 100, 0.0000001, frozenOceanBiomes, true).setMaxZ(7000),
-            new Feature("moss_patch", 0, 50, 0.0008, nonAridLandBiomes, true).setInAir(true),
-            new Feature("moss_patch_ceiling", 0, 50, 0.001, nonAridLandBiomes, true).setInAir(true),
-            new Feature("moss_patch_ceiling", 0, 50, 0.004, List.of(Biome.RIVER), true).setInAir(true),
-            new Feature("dripstone_cluster", -64, 50, 0.0007, landBiomes, true).setInAir(true),
-            new Feature("dripstone_cluster", -64, 50, 0.002, aridBiomes, true).setInAir(true),
-            new Feature("clay_pool_with_dripleaves", -64, 20, 0.00015, nonColdLandBiomes, true).setInAir(true),
-            new Feature("clay_with_dripleaves", -64, 20, 0.00008, nonColdLandBiomes, true).setInAir(true),
-            new Feature("lush_caves_clay", -64, 40, 0.00002, landBiomes, true).setInAir(true)
+            new Feature("shipwreck", 60, 100, 0.0000005, nonDeepOceanBiomes, false),
+            new Feature("shipwreck_beached", 60, 100, 0.000005, beachBiomes, false),
+            new Feature("mineshaft", -60, 45, 0.00001, minesBiomes, false).setHuge(true),
+            new Feature("iceberg_packed", 60, 100, 0.0000002, frozenOceanBiomes, true).setMaxZ(7000),
+            new Feature("iceberg_blue", 60, 100, 0.0000002, frozenOceanBiomes, true).setMaxZ(7000)
     );
     //@formatter:on
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length > 0 && args[0].equals("stop")) {
-            stop = true;
-        } else {
-            generateStructuresAndFeatures(sender, false);
-        }
-        return true;
-    }
+    // @Subcommand("stop")
+    // @Description("Stop the current population.")
+    // @CommandPermission(ADMIN_PERMISSION)
+    // public void onCommand(CommandSender commandSender, Command command, String label, String[] args) { stop = true; }
 
-    public static void generateStructuresAndFeatures(CommandSender sender, boolean thenClean) {
+    // public void generateStructuresAndFeatures(CommandSender commandSender) { generateStructuresAndFeatures(commandSender, false); }
+
+    // @Subcommand("thenClean")
+    // @Description("Place structures and features in a selected area then clean the selected area.")
+    // @CommandPermission(ADMIN_PERMISSION)
+    // public void generateStructuresAndFeaturesThenClean(CommandSender commandSender) { generateStructuresAndFeatures(commandSender, true);
+    // }
+
+    public static void stop() { stop = true; }
+
+    public static void generateStructuresAndFeatures(CommandSender commandSender, boolean thenClean) {
         thingsToPlace = new LinkedList<>();
         thingsToPlaceByChunk = new java.util.HashMap<>();
         if (startTime == -1) { // need to init for the first time.
-            sender.sendMessage("Populating...");
+            commandSender.sendMessage("Populating...");
             thingsLocations = features.stream().map(Feature::getName).collect(java.util.stream.Collectors.toSet()).stream()
                     .collect(java.util.stream.Collectors.toMap(s -> s, s -> new LinkedList<>()));
             startTime = System.currentTimeMillis();
         } else {
-            sender.sendMessage("Resuming populating...");
-            printFullProgress(sender);
+            commandSender.sendMessage("Resuming populating...");
+            printFullProgress(commandSender);
         }
         stop = false;
 
@@ -117,7 +96,7 @@ public class PopulateCommand implements CommandExecutor {
                 // Calculate the number of structures and features to place and there coordinates.
                 while (execTime + 50 > System.currentTimeMillis() && WorldSelectorHPlugin.getSelector().hasNextBlock() && !stop) {
                     Chunk chunk = WorldSelectorHPlugin.getSelector().nextChunk();
-                    Biome biome = chunk.getBlock(0, 0, 0).getBiome();
+                    Biome biome = NMSBiomeUtils.getBiome(chunk.getBlock(0, 0, 0).getLocation());
 
                     for (int i = 0; i < 16; i++) {
                         for (int j = 0; j < 16; j++) {
@@ -150,15 +129,15 @@ public class PopulateCommand implements CommandExecutor {
 
                 if (printTime + 1000 < System.currentTimeMillis()) {
                     printTime = System.currentTimeMillis();
-                    printProgress(sender);
+                    printProgress(commandSender);
                 }
                 if (stop) {
-                    sender.sendMessage("stopping. Wating to all things to be placed & all chunks to be unloaded. "
+                    commandSender.sendMessage("stopping. Wating to all things to be placed & all chunks to be unloaded. "
                             + thingsToPlaceByChunk.size() + " chunks to unload.");
                 }
                 if ((WorldSelectorHPlugin.getSelector().progress() >= 1.0 && thingsToPlace.isEmpty())
                         || (stop && thingsToPlaceByChunk.isEmpty())) {
-                    printFullProgress(sender);
+                    printFullProgress(commandSender);
                     WorldPopulatorHPlugin.plugin.saveData(thingsLocations, cpt, cptTotal, startTime);
                     cancel();
                     if (thenClean && !stop) {
@@ -173,7 +152,7 @@ public class PopulateCommand implements CommandExecutor {
     private static void printProgress(CommandSender sender) {
         double progress = WorldSelectorHPlugin.getSelector().progress();
         long timeForFullProgress = (long) ((System.currentTimeMillis() - startTime) / progress);
-        long timeForFullProgressLeft = timeForFullProgress - (long) (System.currentTimeMillis() - startTime);
+        long timeForFullProgressLeft = timeForFullProgress - (System.currentTimeMillis() - startTime);
         sender.sendMessage("Progress: " + cpt + "   " + progress * 100 + "% ETA: " + Duration.ofMillis(timeForFullProgressLeft));
     }
 

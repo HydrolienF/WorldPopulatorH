@@ -1,10 +1,15 @@
 package fr.formiko.worldpopulatorh;
 
+import fr.formiko.worldpopulatorh.biomes.NMSBiomeUtils;
 import java.util.List;
 import java.util.Random;
-import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import net.minecraft.world.level.biome.Biome;
 
+/**
+ * Global data about features type.
+ * See ThingsToPlace for the instance data.
+ */
 public class Feature {
     private static final Random random = new Random();
     private String name;
@@ -20,12 +25,16 @@ public class Feature {
     private boolean inAir;
     private boolean huge;
 
-    public Feature(String name, int minY, int maxY, double chanceToPlacePerColumn, List<Biome> biomesWhereToPlace, boolean feature) {
+    public Feature(String name, int minY, int maxY, double chanceToPlacePerColumn, List<String> biomesWhereToPlace, boolean feature) {
         this.name = name;
         this.minY = minY;
         this.maxY = maxY;
         this.chanceToPlacePerColumn = chanceToPlacePerColumn;
-        this.biomesWhereToPlace = biomesWhereToPlace;
+        try {
+            this.biomesWhereToPlace = biomesWhereToPlace.stream().map(biomeKey -> NMSBiomeUtils.getBiome(biomeKey)).toList();
+        } catch (Exception e) {
+            WorldPopulatorHPlugin.getInstance().getLogger().warning("Biomes not found for " + name + " : " + biomesWhereToPlace);
+        }
         this.feature = feature;
         this.minX = Integer.MIN_VALUE;
         this.maxX = Integer.MAX_VALUE;
@@ -66,7 +75,7 @@ public class Feature {
     public boolean isInAir() { return inAir; }
     public boolean isHuge() { return huge; }
 
-    public boolean canPlace(Biome biome, double rd) { return biomesWhereToPlace.contains(biome) && rd < chanceToPlacePerColumn; }
+    public boolean canPlace(Biome biome, double rd) { return isCompatibleBiome(biome) && rd < chanceToPlacePerColumn; }
     public ThingsToPlace getThingsToPlace(Block block) {
         int y = getRandomY(block);
         if (y == Integer.MIN_VALUE)

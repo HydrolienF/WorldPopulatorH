@@ -5,6 +5,10 @@ import java.util.List;
 import org.bukkit.Chunk;
 import org.bukkit.Chunk.LoadLevel;
 
+/**
+ * Instance data about things to place.
+ * See Feature for the global data.
+ */
 public class ThingsToPlace {
     private String type;
     private final int x;
