@@ -7,7 +7,7 @@ plugins {
 }
 
 group="fr.formiko.worldpopulatorh"
-version="1.1.4"
+version="1.1.5"
 description="Populate a minecraft world by anning new features and structures"
 
 repositories {
